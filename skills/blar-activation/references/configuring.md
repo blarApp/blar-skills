@@ -126,7 +126,7 @@ If a publish request errors after it was accepted, read `get_feature` before ret
 
 ## From finding to change
 
-| Finding (gold-standard.md) | Change through the connector | Otherwise |
+| Finding (analyses.md) | Change through the connector | Otherwise |
 | --- | --- | --- |
 | A large topic with no answering document (G12) | Write or correct the document | — |
 | A hand-off where the right document was absent or wrong (G13) | Write or correct the document | — |
@@ -136,6 +136,8 @@ If a publish request errors after it was accepted, read `get_feature` before ret
 | A bottleneck stage (G3) | The documents, order or amplifiers of the features behind that stage | Milestone definitions: Blar's team |
 | Accounts never reached (G4) | — | Contact data and channels: Blar's team |
 | No follow-up after a yes (G7) | — | Cadence: Blar's team |
+| A core feature missing from the primary tier, or in the wrong order (defining-activation.md) | The feature's tier, or `reorder_tier_features` | — |
+| A missing milestone, a wrong threshold, or a step in the wrong stage (defining-activation.md) | — | The board: Blar's team |
 
 ## What only Blar's team can change
 

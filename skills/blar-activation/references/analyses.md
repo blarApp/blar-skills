@@ -1,34 +1,34 @@
-# The gold standard: analyses that evaluate and improve activation
+# Analyses of activation
 
-Thirteen analyses in four parts. Each one gives the question it answers, the data, the
-computation, how to read it, and the lever. The terms (Rate at N, Delivered nudge, Interaction…)
-are the ones defined in SKILL.md.
+Thirteen analyses in four parts, to draw on when answering a question: pick the ones that answer
+it. Each one gives the question it answers, the data, the computation, how to read it, and the
+lever. The terms (Activated, Rate at N, Delivered nudge, Interaction…) are the ones defined in
+SKILL.md, and "the agreed condition" is the definition of activation agreed with the company
+(defining-activation.md).
 
-**Cadence:**
-- **Weekly:** G1, G3, G6 and G13.
-- **Monthly:** all thirteen.
-- **After any change:** G10, once the accounts that entered after the change are mature for the
-  comparison day.
+After a change, G10 shows whether it went with faster activation, once the accounts that entered
+after the change are mature for the comparison day.
 
 ## Part A: Outcome
 
 ### G1. Activation curve by cohort
 
 - **Question:** how fast does each weekly cohort of entering accounts activate?
-- **Data:** `list_activation_accounts` for the pipeline, every page, exclusions applied.
+- **Data:** `get_condition_completion` with the agreed condition, every page, with the accounts to
+  leave out.
 - **Computation:** for each cohort c and each day d from 0 up to the age of c's oldest account:
   - The value is the accounts in c activated within d, divided by all accounts in c.
   - Draw one line per cohort, with days since entry on the x axis and % activated on the y axis.
   - The line is solid while d ≤ the age of c's youngest account, and dashed after that, because
     beyond it not every account has lived that long.
 - **Churn ceiling:** also draw, per cohort, the share of accounts not lost by day d ("Lost by day
-  d" in SKILL.md). It is the most the cohort can still activate.
+  d" in SKILL.md, from `lost_at`). It is the most the cohort can still activate.
 - **Read it:**
   - Compare cohorts at the same d. A newer cohort above an older one at the same day activates
     faster.
   - Report each cohort's Rate at 7, 14 and 30 where it is mature.
   - Allow segment, country and project filters, with the minimum size rule.
-- **Lever:** none directly. This is the headline; G2 to G13 explain it.
+- **Lever:** none directly. This is the headline; the other analyses explain it.
 
 ```python
 from datetime import datetime, timedelta
@@ -42,8 +42,8 @@ def cohort_curves(rows, cutoff, tz):
         entered = datetime.fromisoformat(r["entered_at"]).astimezone(zone)
         monday = (entered - timedelta(days=entered.weekday())).date()
         age = (cutoff - entered).total_seconds() / 86400
-        done = r["completed_at"]
-        days = (datetime.fromisoformat(done) - entered).total_seconds() / 86400 if done else None
+        met = r["met_at"]
+        days = max(0.0, (datetime.fromisoformat(met) - entered).total_seconds() / 86400) if met else None
         by_cohort[monday].append((age, days))
     curves = {}
     for monday, accts in sorted(by_cohort.items()):
@@ -55,13 +55,16 @@ def cohort_curves(rows, cutoff, tz):
     return curves
 ```
 
-The computation returns, for each cohort, a list of (day, share activated, solid) points. The
-cutoff must be time-zone aware.
+The rows are the `results` of every page of `get_condition_completion`, and the cutoff is its
+`cutoff`, parsed as a time-zone-aware datetime. The computation returns, for each cohort, a list of
+(day, share activated, solid) points.
 
 ### G2. Rate at the same age, by group
 
 - **Question:** which segments, countries and products activate more slowly?
-- **Data:** the G1 rows. For countries, re-query with the `countries` filter and use `count`.
+- **Data:** `get_condition_completion` once per group, with the `segments`, `countries` or
+  `project_id` filter, reading `rate_at_days`. For the trend, once per entry month with
+  `entered_from` and `entered_to`.
 - **Computation:**
   - Rate at N for N = 7, 14, 30 and 60, split by segment, by country and by project.
   - Also split by entry month, to show the trend.
@@ -121,7 +124,7 @@ summaries, so they cover every account. Open timelines only to look at a few cas
 ### G6. Nudge funnel
 
 - **Question:** which nudges get answered, by channel and by step?
-- **Data:** `get_nudge_funnel` over the review window, grouped by `channel`, then by `milestone`,
+- **Data:** `get_nudge_funnel` over the period asked about, grouped by `channel`, then by `milestone`,
   then by `follow_up_number`.
 - **Computation:**
   - Per nudge: delivered ÷ nudges, then answered ÷ delivered.
@@ -149,6 +152,8 @@ summaries, so they cover every account. Open timelines only to look at a few cas
 ### G8. Interaction and activation
 
 - **Question:** are accounts that engage with Blar more likely to activate?
+- **Data:** the G1 rows, joined on `account_id` with the account rows of `list_activation_accounts`
+  for `engagement`.
 - **Population:** accounts mature for 60. If fewer than 10 accounts fall in any band, use the largest
   N among 14, 30 or 60 that clears 10.
 - **Computation:** Rate at N per band of `engagement.interactions_first_14_days`: 0, 1, 2 to 3, and
@@ -164,7 +169,8 @@ summaries, so they cover every account. Open timelines only to look at a few cas
 
 - **Question:** which executives' portfolios move, and do their tasks go with it?
 - **Data:**
-  - account rows (`owner`, `health`, `days_in_stage`, `engagement.team_touches_first_14_days`);
+  - account rows (`owner`, `health`, `days_in_stage`, `engagement.team_touches_first_14_days`),
+    joined on `account_id` with the G1 rows for Rate at N;
   - `get_task_summary` for the window;
   - `list_tasks` to drill in.
 - **Computation:**
@@ -189,7 +195,8 @@ summaries, so they cover every account. Open timelines only to look at a few cas
 - **Computation:**
   - Fix the change date T before looking at the results.
   - Compare the Rate at N of accounts that entered in the 8 weeks before T with those that entered
-    after T, at the largest N where both groups have at least 10 accounts mature for N.
+    after T, at the largest N where both groups have at least 10 accounts mature for N. Call
+    `get_condition_completion` once per period with `entered_from` and `entered_to`.
   - For two pipelines running at once, compare them by `pipeline_definition_id` in the same way.
 - **Read it:** this compares periods, not a trial. Anything else that changed between them is part of
   the difference. Name what else changed.
@@ -200,7 +207,7 @@ summaries, so they cover every account. Open timelines only to look at a few cas
 ### G11. Support quality
 
 - **Question:** does the AI agent resolve, and how fast?
-- **Data:** `get_support_metrics` for the review window and the equal window before it;
+- **Data:** `get_support_metrics` for the period asked about and the equal period before it;
   `get_conversation_volume` for the trend.
 - **Computation:**
   - `automation_rate`, first response times, resolution time, `unanswered_outbound`.

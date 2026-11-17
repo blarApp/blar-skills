@@ -22,6 +22,8 @@ a month. Answer with the summaries; open rows only to look at a few cases.
 
 | Question | Summary | Drill-down |
 | --- | --- | --- |
+| When accounts met the agreed condition: activation curves and rates | `get_condition_completion` | `list_activation_accounts` |
+| The product events a condition can count | `list_event_types` | — |
 | Accounts, their state, health, owner and engagement | `list_activation_accounts` | `list_account_activity`, `list_account_milestones` |
 | How nudges landed, by channel, step and follow-up | `get_nudge_funnel` | `list_activity` (`origins: ["nudge"]`) |
 | How health moved over time | `get_activation_health_history` | `list_activation_accounts` with `health` |
@@ -70,11 +72,40 @@ a month. Answer with the summaries; open rows only to look at a few cases.
   - `team_touches_first_14_days`: calls, hand-logged work, and threads a member started.
 - **Pages:** `limit` up to 500. Follow `next_offset` until it is null with identical filters. `count`
   is the total.
+- **Size:** a row is about 1.4 KB. For curves and rates use `get_condition_completion`, and read
+  account rows for what only they carry: health, owner, engagement and contacts.
 - **Traps:**
+  - Accounts Blar marks as test accounts are never listed.
   - Status, stage, segment, owner and contacts are current values.
   - `country` is the oldest contact's; to count accounts by country, filter with `countries` and use
     `count`.
   - `completed_at` is cleared if the account is reopened or lost after completing.
+
+## Activation curves
+
+- **`get_condition_completion`** returns when each account met one condition, for the accounts
+  `list_activation_accounts` selects with the same filters.
+  - **Condition,** at most one:
+    - none: Blar's own definition, the whole board (`completed_at`);
+    - `stage`: met when the account left that stage;
+    - `milestone_id`: met when the account's events met that milestone of its own board;
+    - `events`: up to 5 pairs of `event_type_id` (from `list_event_types`) and `count` (1 to 500).
+      Every count has to be reached, and the condition is met at the occurrence that reached the
+      last one.
+  - **Leaving accounts out:** `exclude_account_ids` (Blar ids) and `exclude_external_ids`.
+  - **Output:**
+    - `condition` as read back, `cutoff`, `accounts`, `met`;
+    - `not_on_board`: accounts left out because their board lacks the milestone;
+    - `rate_at_days` for 7, 14, 30 and 60 days: `met` over `mature`, with `share`.
+  - **Rows:** `account_id`, `external_id`, `entered_at`, `met_at`, `lost_at`.
+  - **Pages:** `limit` up to 500. Every page carries the same totals; follow `next_offset` with
+    identical arguments.
+  - **Traps:**
+    - `met_at` can precede `entered_at` when the account did it before entering; count it as day 0.
+    - With no condition, `completed_at` is cleared if the account is reopened or lost after
+      completing.
+- **`list_event_types`** lists the product's events Blar receives: `event_type_id`, `key`, `name`
+  and `feature`. Blar has only the events it receives, and only since it started receiving them.
 
 ## Totals and history
 

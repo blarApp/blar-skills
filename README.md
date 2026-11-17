@@ -2,8 +2,9 @@
 
 This plugin connects Claude to your company's Blar account and adds the `blar-activation` skill. With
 it, Claude can read how your customer accounts activate, what Blar's nudges and AI agent achieve,
-and what your users ask. It runs a standard review of your activation process, the gold standard,
-and with your confirmation it corrects your Blar documentation and curates your feature catalog.
+and what your users ask. It first agrees with you on what counts as an activated account, measures
+your activation on that definition, suggests what to change, and with your confirmation corrects
+your Blar documentation and curates your feature catalog.
 
 You need a Blar account. Everything the connector reads or changes belongs only to your company.
 
@@ -44,6 +45,7 @@ admin account.
 
 ## Try
 
-- "Run the gold-standard review of our activation for the last 90 days."
+- "How is our activation going?"
 - "Show the activation curve by weekly cohort, by segment."
+- "How many accounts created 100 products within their first 30 days?"
 - "Why did the AI agent hand conversations to the team this month, and what should we fix?"

@@ -1,7 +1,7 @@
 {
   "name": "blar",
-  "version": "0.1.0",
-  "description": "Evaluate and improve customer activation with Blar: read your activation, nudge and support data, run the gold-standard review, and curate your documentation and features.",
+  "version": "0.2.0",
+  "description": "Evaluate and improve customer activation with Blar: agree on what counts as activated, measure your activation curves and health, read your nudge and support data, and curate your documentation and features.",
   "author": {
     "name": "Blar",
     "url": "https://blar.io"
