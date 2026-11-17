@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "blar": {
+      "type": "http",
+      "url": "https://api.blar.io/api/mcp"
+    }
+  }
+}

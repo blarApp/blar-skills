@@ -1,0 +1,12 @@
+{
+  "name": "blar",
+  "version": "0.1.0",
+  "description": "Evaluate and improve customer activation with Blar: read your activation, nudge and support data, run the gold-standard review, and curate your documentation and features.",
+  "author": {
+    "name": "Blar",
+    "url": "https://blar.io"
+  },
+  "homepage": "https://blar.io",
+  "repository": "https://github.com/blarApp/blar-skills",
+  "keywords": ["blar", "activation", "onboarding", "customer-success", "mcp"]
+}

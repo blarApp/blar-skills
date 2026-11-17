@@ -1,0 +1,15 @@
+{
+  "name": "blar",
+  "description": "Blar's plugin for Claude: the Blar connector and the blar-activation skill.",
+  "owner": {
+    "name": "Blar",
+    "url": "https://blar.io"
+  },
+  "plugins": [
+    {
+      "name": "blar",
+      "source": "./",
+      "description": "Evaluate and improve customer activation with Blar: read your activation, nudge and support data, run the gold-standard review, and curate your documentation and features."
+    }
+  ]
+}
